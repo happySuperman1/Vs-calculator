@@ -1,4 +1,4 @@
-const CACHE_NAME = "fn-adhesion-calculator-20260806-case1-default";
+const CACHE_NAME = "fn-adhesion-calculator-20260806-case1-default-r2";
 
 const APP_SHELL = [
   "./",
