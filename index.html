@@ -173,12 +173,10 @@
       .hero { border-radius:20px; }
       .hero-inner { padding:22px 19px; gap:18px; }
       .grid { grid-template-columns:1fr; }
-      .left-column { display:contents; }
-      .form-card { grid-row:1; }
-      .result-card { position:static; grid-row:2; }
-      .scale-section { grid-row:3; }
+      .result-card { position:static; grid-row:1; }
       .card { border-radius:19px; padding:18px; }
       .metrics { grid-template-columns:1fr 1fr; }
+      .left-column { gap:14px; }
       .scale-section { padding:16px; }
       .grade-card img { height:126px; }
     }
@@ -201,10 +199,9 @@
     <section class="hero">
       <div class="hero-inner">
         <div class="hero-copy">
-          <span class="eyebrow">Fully offline · Shanghai General Hospital Neurosurgery · Research-use calculator</span>
           <h1>Preoperative Facial Nerve Adhesion Probability Calculator</h1>
           <p>This research model applies only to vestibular schwannomas with a maximum diameter of 25 mm or less. Enter age, sex, maximum whole-tumor diameter on axial contrast-enhanced T1-weighted MRI (CPA + IAC), and preoperative PDW (%) to estimate the probability of intraoperative grade 3–4 facial nerve adhesion. The displayed lower, intermediate, and higher bands are descriptive internal reference bands, not externally validated clinical action thresholds. All calculations remain on this device; no patient information is uploaded or stored.</p>
-          <p class="affiliation">Developed at the Department of Neurosurgery, Shanghai General Hospital, Shanghai Jiao Tong University School of Medicine.</p>
+          <p class="affiliation">Developed at the Acoustic Neuroma Clinical Diagnosis and Treatment Center, Department of Neurosurgery, Shanghai General Hospital, Shanghai Jiao Tong University School of Medicine.</p>
         </div>
         <aside class="workflow-card" aria-label="Model workflow schematic">
           <div class="workflow-head">
@@ -249,25 +246,25 @@
             <div class="form-grid">
               <div class="field">
                 <label for="age">Age at Surgery (years)</label>
-                <input id="age" type="number" min="18" max="100" step="1" value="48" inputmode="numeric" required>
+                <input id="age" type="number" min="18" max="100" step="1" inputmode="numeric" required>
                 <small>Central development range (1st–99th percentile): 23.0–71.5 years</small>
               </div>
               <div class="field">
                 <label>Sex</label>
                 <div class="segmented" role="group" aria-label="Sex">
-                  <button type="button" data-sex="0" class="active" aria-pressed="true">Female</button>
+                  <button type="button" data-sex="0" aria-pressed="false">Female</button>
                   <button type="button" data-sex="1" aria-pressed="false">Male</button>
                 </div>
-                <input id="sex" type="hidden" value="0">
+                <input id="sex" type="hidden" value="">
               </div>
               <div class="field">
                 <label for="size">Maximum Tumor Diameter (mm)</label>
-                <input id="size" type="number" min="2" max="60" step="0.1" value="20" inputmode="decimal" required>
+                <input id="size" type="number" min="2" max="60" step="0.1" inputmode="decimal" required>
                 <small>Axial contrast-enhanced T1; maximum whole-tumor diameter including CPA and IAC components. Tumors &gt;25 mm are outside this calculator's intended population.</small>
               </div>
               <div class="field">
                 <label for="pdw">PDW (%)</label>
-                <input id="pdw" type="number" min="1" max="50" step="0.1" value="12.35" inputmode="decimal" required>
+                <input id="pdw" type="number" min="1" max="50" step="0.1" inputmode="decimal" required>
                 <small>Platelet distribution width reported as coefficient of variation (%). Local reference interval: 9–17%; central development range: 8.6–19.2%.</small>
               </div>
             </div>
@@ -368,7 +365,7 @@
         </ul>
       </details>
     </section>
-    <footer>Data source: raw_data_472.xlsx (SHA-256: d7880e08…8a0bb0d) · Developed at the Department of Neurosurgery, Shanghai General Hospital · Offline research-use calculator · No patient-level data embedded</footer>
+    <footer>Designed and developed by Chen Yan, Houshi Xu and Zixu Pei, Acoustic Neuroma Clinical Diagnosis and Treatment Center, Department of Neurosurgery, Shanghai General Hospital, Shanghai Jiao Tong University School of Medicine, Shanghai 200080, China.</footer>
   </main>
 
   <script>
@@ -380,7 +377,7 @@
       ranges:{Age:{min:19,p01:23,p99:71.56999999999999,max:76},TumorSize:{min:6,p01:8,p99:25,max:25},PDW:{min:8.199999999999999,p01:8.6,p99:19.214,max:23.6}},
       localReference:{PDW:{low:9,high:17,unit:"%"}}
     };
-    let sexValue=0;
+    let sexValue=null;
     let lastSummary="";
     const $=id=>document.getElementById(id);
 
@@ -495,7 +492,9 @@
 
     $("riskForm").addEventListener("submit",event=>{
       event.preventDefault();
-      const values={Age:Number($("age").value),Sex_binary:sexValue,TumorSize:Number($("size").value),PDW:Number($("pdw").value)};
+      const ageRaw=$("age").value.trim(), sizeRaw=$("size").value.trim(), pdwRaw=$("pdw").value.trim();
+      if(!ageRaw||sexValue===null||!sizeRaw||!pdwRaw){$("warning").style.display="block";$("warning").textContent="Please complete all required fields.";return;}
+      const values={Age:Number(ageRaw),Sex_binary:sexValue,TumorSize:Number(sizeRaw),PDW:Number(pdwRaw)};
       if(Object.values(values).some(v=>!Number.isFinite(v))){$("warning").style.display="block";$("warning").textContent="Please complete all required fields.";return;}
       const messages=validate(values);
       if(values.TumorSize>25){renderOutOfScope(messages[0]);return;}
@@ -513,12 +512,6 @@
       }
     });
 
-    render(calculate({
-      Age:Number($("age").value),
-      Sex_binary:sexValue,
-      TumorSize:Number($("size").value),
-      PDW:Number($("pdw").value)
-    }),[]);
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(() => {});
